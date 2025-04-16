@@ -62,4 +62,41 @@ class User extends Authenticatable
     {
         return 'login_id';
     }
+
+    public function admin()
+    {
+        return $this->hasOne(Admin::class, 'user_id');
+    }
+
+    public function finance()
+    {
+        return $this->hasOne(Finance::class, 'user_id');
+    }
+
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'student_id', 'login_id'); // Match login_id with student_id
+    }
+
+    /**
+     * Get the profile name based on the user's role.
+     *
+     * @return string
+     */
+    public function getProfileNameAttribute(): string
+    {
+        if ($this->role === 'admin' && $this->admin) {
+            return $this->admin->first_name . ' ' . $this->admin->last_name;
+        }
+
+        if ($this->role === 'finance' && $this->finance) {
+            return $this->finance->first_name . ' ' . $this->finance->last_name;
+        }
+
+        if ($this->role === 'student' && $this->student) {
+            return $this->student->first_name . ' ' . $this->student->last_name;
+        }
+
+        return 'Unknown User'; // Provide a default value if no related record is found
+    }
 }

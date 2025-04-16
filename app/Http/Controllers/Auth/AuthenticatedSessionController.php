@@ -28,7 +28,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Call the authenticated method for role-based redirection
+        return $this->authenticated($request, Auth::user());
     }
 
     /**
@@ -43,5 +44,21 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    /**
+     * Handle post-authentication redirection based on user role.
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        if ($user->role === 'student') {
+            return redirect()->route('student.studentDashboard');
+        } elseif ($user->role === 'finance') {
+            return redirect()->route('finance.financeDashboard');
+        } elseif ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard'); // Optional for admin
+        }
+
+        return redirect('/'); // Default fallback
     }
 }
