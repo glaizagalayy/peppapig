@@ -34,6 +34,13 @@ class User extends Authenticatable
     ];
 
     /**
+     * Specify the correct table name.
+     *
+     * @var string
+     */
+    protected $table = 'pnph_users';
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -44,5 +51,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Specify login_id as the username field.
+     *
+     * @return string
+     */
+    protected function username(): string
+    {
+        return 'login_id';
     }
 }

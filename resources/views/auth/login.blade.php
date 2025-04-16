@@ -35,8 +35,8 @@
                 @csrf
 
                 <div class="form-group">
-                    <label for="login_id">Faculty ID | Student ID:</label>
-                    <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus>
+                    <label for="login_id">Login ID:</label>
+                    <input type="text" id="login_id" name="login_id" value="{{ old('login_id') }}" required autofocus>
                 </div>
 
                 <div class="form-group">
