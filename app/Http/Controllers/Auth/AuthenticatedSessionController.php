@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -51,14 +52,29 @@ class AuthenticatedSessionController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-        if ($user->role === 'student') {
-            return redirect()->route('student.studentDashboard');
-        } elseif ($user->role === 'finance') {
-            return redirect()->route('finance.financeDashboard');
-        } elseif ($user->role === 'admin') {
-            return redirect()->route('admin.dashboard'); // Optional for admin
+        // Check if the user is deactivated
+        if (!$user->is_active) {
+            Auth::logout();
+            return redirect()->route('login')->withErrors(['login_id' => 'Your account has been deactivated.']);
         }
 
-        return redirect('/'); // Default fallback
+        // Check if the user needs to reset their password
+        if ($user->password_reset_required) {
+            // Verify if the user is logging in with their temporary password
+            if (Hash::check($request->password, $user->password)) {
+                return redirect()->route('password.change');
+            }
+        }
+
+        // Redirect based on the user's role
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->role === 'finance') {
+            return redirect()->route('finance.financeDashboard');
+        } elseif ($user->role === 'student') {
+            return redirect()->route('student.studentDashboard');
+        }
+
+        return redirect('/');
     }
 }

@@ -18,9 +18,12 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'login_id',
         'email',
         'password',
+        'role',
+        'is_active',
+        'password_reset_required',
     ];
 
     /**
@@ -83,7 +86,7 @@ class User extends Authenticatable
      *
      * @return string
      */
-    public function getProfileNameAttribute(): string
+    public function getProfileNameAttribute()
     {
         if ($this->role === 'admin' && $this->admin) {
             return $this->admin->first_name . ' ' . $this->admin->last_name;
@@ -98,5 +101,22 @@ class User extends Authenticatable
         }
 
         return 'Unknown User'; // Provide a default value if no related record is found
+    }
+
+    public function getFullNameAttribute()
+    {
+        if ($this->role === 'admin' && $this->admin) {
+            return $this->admin->first_name . ' ' . $this->admin->last_name;
+        }
+
+        if ($this->role === 'finance' && $this->finance) {
+            return $this->finance->first_name . ' ' . $this->finance->last_name;
+        }
+
+        if ($this->role === 'student' && $this->student) {
+            return $this->student->first_name . ' ' . $this->student->last_name;
+        }
+
+        return 'Unknown User'; // Default if no related record is found
     }
 }

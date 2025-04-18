@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PasswordController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -29,6 +31,36 @@ Route::middleware(['auth', 'role:student'])->group(function () {
         return view('student.studentDashboard');
     })->name('student.studentDashboard');
 });
+
+
+//admin
+
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/dashboard', function () {
+        return view('admin.adminDashboard');
+    })->name('admin.dashboard');
+
+    Route::get('/admin/manage-users', [AdminController::class, 'manageUsers'])->name('admin.manageUsers');
+    Route::get('/admin/add-user', [AdminController::class, 'addUserForm'])->name('admin.addUser');
+    Route::post('/admin/add-user', [AdminController::class, 'addUser'])->name('admin.storeUser');
+    Route::get('/admin/edit-user/{id}', [AdminController::class, 'editUserForm'])->name('admin.editUser');
+    Route::patch('/admin/update-user/{id}', [AdminController::class, 'updateUser'])->name('admin.updateUser');
+    Route::patch('/admin/deactivate-user/{id}', [AdminController::class, 'deactivateUser'])->name('admin.deactivateUser');
+    Route::patch('/admin/activate-user/{id}', [AdminController::class, 'activateUser'])->name('admin.activateUser');
+});
+
+
+Route::get('/test-email', function () {
+    $tempPassword = 'Test1234';
+    try {
+        Mail::to('dagaasgerlieannkatherine@gmail.com')->send(new \App\Mail\TemporaryPasswordMail($tempPassword));
+        return 'Email sent successfully!';
+    } catch (\Exception $e) {
+        return 'Failed to send email: ' . $e->getMessage();
+    }
+});
+
 
 Route::middleware(['auth', 'role:student'])->group(function () {
     Route::get('/student/payments', function () {
@@ -67,5 +99,8 @@ Route::middleware(['auth', 'role:finance'])->group(function () {
         return view('finance.financeDashboard');
     })->name('finance.financeDashboard');
 });
+
+Route::get('/password/change', [PasswordController::class, 'showChangePasswordForm'])->name('password.change');
+Route::post('/password/change', [PasswordController::class, 'changePassword'])->name('password.update');
 
 require __DIR__.'/auth.php';
