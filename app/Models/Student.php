@@ -27,4 +27,9 @@ class Student extends Model
     {
         return $this->belongsTo(User::class, 'student_id', 'login_id');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'student_id', 'student_id');
+    }
 }

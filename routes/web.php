@@ -100,6 +100,12 @@ Route::middleware(['auth', 'role:finance'])->group(function () {
     })->name('finance.financeDashboard');
 });
 
+Route::middleware(['auth', 'role:finance'])->group(function () {
+    Route::get('/finance/payments', [FinanceController::class, 'managePayments'])->name('finance.financePayments');
+    Route::get('/finance/payments/history/{studentId}', [FinanceController::class, 'getPaymentHistory']);
+    Route::post('/finance/payments/add', [FinanceController::class, 'addPayment'])->name('finance.addPayment');
+});
+
 Route::get('/password/change', [PasswordController::class, 'showChangePasswordForm'])->name('password.change');
 Route::post('/password/change', [PasswordController::class, 'changePassword'])->name('password.update');
 

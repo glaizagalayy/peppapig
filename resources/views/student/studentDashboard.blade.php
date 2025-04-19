@@ -57,5 +57,25 @@
             </div>
         </div>
     </div>
+
+    <!-- Payment Summary Card -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header text-white" style="background-color: #FF9933;">
+                    <h5 class="mb-0">Payment Summary</h5>
+                </div>
+                <div class="card-body">
+                    @php
+                        $totalPaid = Auth::user()->student->payments->sum('amount');
+                        $totalDue = 500 * 24; // 500 pesos per month for 2 years
+                        $remainingBalance = $totalDue - $totalPaid;
+                    @endphp
+                    <p><strong>Total Paid:</strong> ₱{{ number_format($totalPaid, 2) }}</p>
+                    <p><strong>Remaining Balance:</strong> ₱{{ number_format($remainingBalance, 2) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
