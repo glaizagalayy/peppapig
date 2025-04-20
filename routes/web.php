@@ -63,6 +63,10 @@ Route::get('/test-email', function () {
 
 
 Route::middleware(['auth', 'role:student'])->group(function () {
+    Route::get('/student/payment', [StudentController::class, 'paymentForm'])->name('student.paymentForm');
+    Route::post('/student/payments/upload', [StudentController::class, 'uploadPaymentProof'])->name('student.uploadPaymentProof');
+});
+Route::middleware(['auth', 'role:student'])->group(function () {
     Route::get('/student/payments', function () {
         return view('student.studentPayments');
     })->name('student.studentPayments');
@@ -104,6 +108,7 @@ Route::middleware(['auth', 'role:finance'])->group(function () {
     Route::get('/finance/payments', [FinanceController::class, 'managePayments'])->name('finance.financePayments');
     Route::get('/finance/payments/history/{studentId}', [FinanceController::class, 'getPaymentHistory']);
     Route::post('/finance/payments/add', [FinanceController::class, 'addPayment'])->name('finance.addPayment');
+    Route::post('/finance/payments/verify/{payment}', [FinanceController::class, 'verifyPayment'])->name('finance.verifyPayment');
 });
 
 Route::get('/password/change', [PasswordController::class, 'showChangePasswordForm'])->name('password.change');

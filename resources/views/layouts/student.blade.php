@@ -40,6 +40,12 @@
             Proof of Payment
           </a>
         </li>
+         <li class="nav-item">
+          <a href="{{ route('student.paymentForm') }}" class="nav-link @if(request()->routeIs('student.paymentForm.blade')) active @endif">
+            <i class="fas fa-credit-card me-2"></i>
+            Proof of Payment
+          </a>
+        </li>
       </ul>
     </div>
   </nav>

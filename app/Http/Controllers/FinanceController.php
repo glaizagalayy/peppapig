@@ -39,4 +39,27 @@ class FinanceController extends Controller
 
         return redirect()->route('finance.financePayments')->with('success', 'Payment added successfully!');
     }
+
+    public function verifyPayment(Request $request, Payment $payment)
+    {
+        $request->validate([
+            'status' => 'required|in:Approved,Declined',
+        ]);
+
+        $payment->update([
+            'status' => $request->status,
+        ]);
+
+        if ($request->status === 'Approved') {
+            // Update the student's payment record
+            $payment->student->payments()->create([
+                'amount' => $payment->amount,
+                'payment_date' => $payment->payment_date,
+                'payment_mode' => $payment->payment_mode,
+                'status' => 'Approved',
+            ]);
+        }
+
+        return redirect()->route('finance.financePayments')->with('success', 'Payment status updated successfully!');
+    }
 }

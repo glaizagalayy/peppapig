@@ -22,7 +22,7 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        {{-- <th>#</th> --}}
                         <th>Student ID</th>
                         <th>Name</th>
                         <th>Total Paid</th>
@@ -38,7 +38,7 @@
                             $remainingBalance = $totalDue - $totalPaid;
                         @endphp
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
+                            {{-- <td>{{ $loop->iteration }}</td> --}}
                             <td>{{ $student->student_id }}</td>
                             <td>{{ $student->first_name }} {{ $student->last_name }}</td>
                             <td>₱{{ number_format($totalPaid, 2) }}</td>
@@ -71,10 +71,10 @@
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <th>#</th>
                             <th>Amount</th>
                             <th>Date</th>
                             <th>Mode</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="paymentHistory">
@@ -124,10 +124,11 @@
                 data.forEach((payment, index) => {
                     paymentHistory.innerHTML += `
                         <tr>
-                            <td>${index + 1}</td>
+                           {{-- <td>${index + 1}</td> --}}
                             <td>₱${payment.amount.toFixed(2)}</td>
                             <td>${payment.payment_date}</td>
                             <td>${payment.payment_mode}</td>
+                            <td>${payment.status}</td>
                         </tr>
                     `;
                 });
