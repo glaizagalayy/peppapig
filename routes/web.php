@@ -78,6 +78,10 @@ Route::middleware(['auth', 'role:student'])->group(function () {
     })->name('student.studentUpload');
 });
 
+Route::middleware(['auth', 'role:student'])->group(function () {
+    Route::get('/student/notifications', [StudentController::class, 'notifications'])->name('student.notifications');
+});
+
 Route::middleware(['auth', 'role:finance'])->group(function () {
     Route::get('/finance/dashboard', function () {
         return view('finance.financeDashboard');
@@ -109,6 +113,10 @@ Route::middleware(['auth', 'role:finance'])->group(function () {
     Route::get('/finance/payments/history/{studentId}', [FinanceController::class, 'getPaymentHistory']);
     Route::post('/finance/payments/add', [FinanceController::class, 'addPayment'])->name('finance.addPayment');
     Route::post('/finance/payments/verify/{payment}', [FinanceController::class, 'verifyPayment'])->name('finance.verifyPayment');
+});
+
+Route::middleware(['auth', 'role:finance'])->group(function () {
+    Route::get('/finance/notifications', [FinanceController::class, 'notifications'])->name('finance.notifications');
 });
 
 Route::get('/password/change', [PasswordController::class, 'showChangePasswordForm'])->name('password.change');

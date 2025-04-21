@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    protected $primaryKey = 'payment_id'; // Define the primary key
+
     protected $fillable = [
-        '_token', // CSRF token for form submissions
         'student_id',
         'amount',
         'payment_date',
@@ -15,6 +16,7 @@ class Payment extends Model
         'payment_proof',
         'status',
         'verified_by',
+        'reference_number',
     ];
 
     public function student()

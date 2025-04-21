@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use App\Notifications\PaymentSubmissionNotification;
+use Illuminate\Support\Facades\Auth;
 
 class FinanceController extends Controller
 {
@@ -21,6 +23,7 @@ class FinanceController extends Controller
 
     public function getPaymentHistory($studentId)
     {
+
         $payments = Payment::where('student_id', $studentId)->get();
         return response()->json($payments);
     }
@@ -40,26 +43,33 @@ class FinanceController extends Controller
         return redirect()->route('finance.financePayments')->with('success', 'Payment added successfully!');
     }
 
-    public function verifyPayment(Request $request, Payment $payment)
+    public function verifyPayment(Request $request, $notificationId)
     {
         $request->validate([
             'status' => 'required|in:Approved,Declined',
         ]);
 
-        $payment->update([
-            'status' => $request->status,
-        ]);
+        // Find the notification
+        $notification = Auth::user()->notifications()->findOrFail($notificationId);
+        $paymentData = $notification->data;
 
-        if ($request->status === 'Approved') {
-            // Update the student's payment record
-            $payment->student->payments()->create([
-                'amount' => $payment->amount,
-                'payment_date' => $payment->payment_date,
-                'payment_mode' => $payment->payment_mode,
-                'status' => 'Approved',
-            ]);
-        }
+        // Update the payment status using the correct primary key
+        $payment = Payment::where('payment_id', $paymentData['payment_id'])->firstOrFail();
+        $payment->update(['status' => $request->status]);
 
-        return redirect()->route('finance.financePayments')->with('success', 'Payment status updated successfully!');
+        // Notify the student about the status update
+        $student = $payment->student;
+        $student->user->notify(new PaymentSubmissionNotification($payment));
+
+        // Mark the notification as read
+        $notification->markAsRead();
+
+        return redirect()->route('finance.notifications')->with('success', 'Payment status updated successfully!');
+    }
+
+    public function notifications()
+    {
+        $notifications = Auth::user()->notifications()->orderBy('created_at', 'desc')->get();
+        return view('finance.notifications', compact('notifications'));
     }
 }

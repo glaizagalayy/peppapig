@@ -74,7 +74,9 @@
                             <th>Amount</th>
                             <th>Date</th>
                             <th>Mode</th>
+                            <th>Reference Number</th>
                             <th>Status</th>
+                            <th>Proof</th>
                         </tr>
                     </thead>
                     <tbody id="paymentHistory">
@@ -124,11 +126,14 @@
                 data.forEach((payment, index) => {
                     paymentHistory.innerHTML += `
                         <tr>
-                           {{-- <td>${index + 1}</td> --}}
                             <td>₱${payment.amount.toFixed(2)}</td>
                             <td>${payment.payment_date}</td>
                             <td>${payment.payment_mode}</td>
+                            <td>${payment.reference_number ?? 'N/A'}</td>
                             <td>${payment.status}</td>
+                            <td>
+                                ${payment.status === 'Approved' ? `<a href="/storage/${payment.payment_proof}" target="_blank">View Proof</a>` : 'N/A'}
+                            </td>
                         </tr>
                     `;
                 });

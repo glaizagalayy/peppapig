@@ -41,6 +41,12 @@
             Reports
           </a>
         </li>
+        <li class="nav-item">
+          <a href="{{ route('finance.notifications') }}" class="nav-link @if(request()->routeIs('finance.notifications')) active @endif">
+            <i class="fas fa-bell me-2"></i>
+            Notifications
+          </a>
+        </li>
       </ul>
     </div>
   </nav>

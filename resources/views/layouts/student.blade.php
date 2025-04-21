@@ -46,6 +46,12 @@
             Proof of Payment
           </a>
         </li>
+        <li class="nav-item">
+          <a href="{{ route('student.notifications') }}" class="nav-link @if(request()->routeIs('student.notifications')) active @endif">
+            <i class="fas fa-bell me-2"></i>
+            Notifications
+          </a>
+        </li>
       </ul>
     </div>
   </nav>

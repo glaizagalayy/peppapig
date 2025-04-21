@@ -76,6 +76,27 @@
                 </div>
             </div>
         </div>
+
+        <!-- Notifications Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header text-white" style="background-color: #FF9933;">
+                    <h5 class="mb-0">Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        @foreach (Auth::user()->notifications as $notification)
+                            <li class="list-group-item">
+                                {{ $notification->data['message'] ?? 'No message available.' }}
+                                <span class="badge bg-{{ $notification->data['status'] === 'Approved' ? 'success' : ($notification->data['status'] === 'Declined' ? 'danger' : 'warning') }}">
+                                    {{ $notification->data['status'] }}
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
