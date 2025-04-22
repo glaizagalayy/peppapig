@@ -105,6 +105,20 @@ Route::middleware(['auth', 'role:finance'])->group(function () {
     Route::get('/finance/payments/history/{studentId}', [FinanceController::class, 'getPaymentHistory']);
     Route::post('/finance/payments/add', [FinanceController::class, 'addPayment'])->name('finance.addPayment');
 });
+Route::middleware(['auth', 'role:finance'])->group(function () {
+    Route::get('/finance/payment-history', function () {
+        return view('finance.payment-history', [
+            'students' => \App\Models\Student::with('payments')->get()
+        ]);
+    })->name('finance.payment-history');
+
+    Route::get('/finance/payment-history/{studentId}', [FinanceController::class, 'getPaymentHistory'])
+        ->name('finance.getPaymentHistory');
+});
+
+Route::middleware(['auth', 'role:finance'])->group(function () {
+    Route::post('/finance/manage-batches', [FinanceController::class, 'updateBatch'])->name('finance.updateBatch');
+});
 
 Route::get('/password/change', [PasswordController::class, 'showChangePasswordForm'])->name('password.change');
 Route::post('/password/change', [PasswordController::class, 'changePassword'])->name('password.update');

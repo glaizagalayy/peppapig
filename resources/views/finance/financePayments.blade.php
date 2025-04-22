@@ -13,10 +13,27 @@
         </div>
     @endif
 
+    <!-- Batch Filter -->
+    <div class="mb-3">
+        <label for="batchFilter" class="form-label">Filter by Batch Year</label>
+        <select id="batchFilter" class="form-select" onchange="filterByBatch()">
+            <option value="">All Batches</option>
+            @foreach ($batches as $batch)
+                <option value="{{ $batch->batch_year }}" {{ request('batch_year') == $batch->batch_year ? 'selected' : '' }}>
+                    {{ $batch->batch_year }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
     <!-- Payment Table -->
     <div class="card shadow-sm">
-        <div class="card-header text-white" style="background-color: #FF9933;">
+        <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: #FF9933;">
             <h5 class="mb-0">Student Payments</h5>
+            <!-- Settings Icon -->
+            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#manageBatchModal">
+                <i class="fas fa-cog"></i> Manage Batches
+            </button>
         </div>
         <div class="card-body">
             <table class="table table-striped">
@@ -34,8 +51,8 @@
                     @foreach ($students as $student)
                         @php
                             $totalPaid = $student->payments->sum('amount');
-                            $totalDue = 500 * 24; // 500 pesos per month for 2 years
-                            $remainingBalance = $totalDue - $totalPaid;
+                            $totalDue = $student->batch->total_due ?? 0; // Fetch total_due dynamically from the batch
+                            $remainingBalance = max(0, $totalDue - $totalPaid); // Ensure remaining balance is not negative
                         @endphp
                         <tr>
                             <td>{{ $loop->iteration }}</td>
@@ -45,8 +62,8 @@
                             <td>₱{{ number_format($remainingBalance, 2) }}</td>
                             <td>
                                 <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal" 
-                                        onclick="loadPaymentHistory('{{ $student->student_id }}')">
-                                    View & Add Payment
+                                        onclick="loadAddPaymentForm('{{ $student->student_id }}')">
+                                    Add Payment
                                 </button>
                             </td>
                         </tr>
@@ -57,33 +74,43 @@
     </div>
 </div>
 
+<!-- Manage Batch Modal -->
+<div class="modal fade" id="manageBatchModal" tabindex="-1" aria-labelledby="manageBatchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="manageBatchModalLabel">Manage Batch Payment Amounts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ route('finance.updateBatch') }}" method="POST">
+                    @csrf
+                    @method('POST')
+                    <div class="mb-3">
+                        <label for="batch_year" class="form-label">Batch Year</label>
+                        <input type="text" name="batch_year" id="batch_year" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="total_due" class="form-label">Total Amount Due</label>
+                        <input type="number" name="total_due" id="total_due" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Payment Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="paymentModalLabel">Payment Details</h5>
+                <h5 class="modal-title" id="paymentModalLabel">Add Payment</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Payment History -->
-                <h6>Payment History</h6>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                            <th>Mode</th>
-                        </tr>
-                    </thead>
-                    <tbody id="paymentHistory">
-                        <!-- Payment history will be loaded here via JavaScript -->
-                    </tbody>
-                </table>
-
                 <!-- Add Payment Form -->
-                <h6 class="mt-4">Add Payment</h6>
                 <form id="addPaymentForm" method="POST" action="{{ route('finance.addPayment') }}">
                     @csrf
                     <input type="hidden" id="student_id" name="student_id">
@@ -111,27 +138,19 @@
 </div>
 
 <script>
-    function loadPaymentHistory(studentId) {
+    function loadAddPaymentForm(studentId) {
         document.getElementById('student_id').value = studentId;
+    }
 
-        // Fetch payment history via AJAX
-        fetch(`/finance/payments/history/${studentId}`)
-            .then(response => response.json())
-            .then(data => {
-                const paymentHistory = document.getElementById('paymentHistory');
-                paymentHistory.innerHTML = '';
-
-                data.forEach((payment, index) => {
-                    paymentHistory.innerHTML += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>₱${payment.amount.toFixed(2)}</td>
-                            <td>${payment.payment_date}</td>
-                            <td>${payment.payment_mode}</td>
-                        </tr>
-                    `;
-                });
-            });
+    function filterByBatch() {
+        const batchYear = document.getElementById('batchFilter').value;
+        const url = new URL(window.location.href);
+        if (batchYear) {
+            url.searchParams.set('batch_year', batchYear);
+        } else {
+            url.searchParams.delete('batch_year');
+        }
+        window.location.href = url.toString();
     }
 </script>
 @endsection
