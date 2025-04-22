@@ -8,7 +8,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('css/finance.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   @stack('styles')
+  @stack('scripts')
 </head>
 <body>
 
@@ -42,11 +44,10 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="{{ route('finance.notifications') }}" class="nav-link @if(request()->routeIs('finance.notifications')) active @endif">
-            <i class="fas fa-bell me-2"></i>
-            Notifications
+          <a href="{{ route('finance.payment-history') }}" class="nav-link @if(request()->routeIs('finance.financeSettings')) active @endif">
+            <i class="fas fa-cog me-2"></i>
+            Payment History
           </a>
-        </li>
       </ul>
     </div>
   </nav>

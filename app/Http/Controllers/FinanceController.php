@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Student;
+use App\Models\Batch;
 use Illuminate\Http\Request;
 use App\Notifications\PaymentSubmissionNotification;
 use Illuminate\Support\Facades\Auth;
@@ -17,15 +18,35 @@ class FinanceController extends Controller
 
     public function managePayments()
     {
-        $students = Student::with('payments')->get();
-        return view('finance.financePayments', compact('students'));
+        $students = Student::with('payments', 'batch')->get(); // Include the 'batch' relationship
+        $batches = Batch::all(); // Fetch all available batches
+        return view('finance.financePayments', compact('students', 'batches'));
+    }
+
+    public function index(Request $request)
+    {
+        $batchYear = $request->query('batch_year');
+        $students = Student::with('payments', 'batch')
+            ->when($batchYear, function ($query, $batchYear) {
+                $query->where('batch_year', '=', $batchYear);
+            })
+            ->get();
+
+        dd($batchYear, $students); // Debug the batch year and filtered students
+
+        $batches = Batch::all();
+
+        return view('finance.financePayments', compact('students', 'batches'));
     }
 
     public function getPaymentHistory($studentId)
     {
+        $student = \App\Models\Student::with('payments')->where('student_id', $studentId)->firstOrFail();
 
-        $payments = Payment::where('student_id', $studentId)->get();
-        return response()->json($payments);
+        return view('finance.student-payment-history', [
+            'student' => $student,
+            'payments' => $student->payments,
+        ]);
     }
 
     public function addPayment(Request $request)
@@ -40,36 +61,21 @@ class FinanceController extends Controller
         // Exclude `_token` from the request data
         Payment::create($request->except('_token'));
 
-        return redirect()->route('finance.financePayments')->with('success', 'Payment added successfully!');
+        return redirect()->route('finance.payment-history', ['studentId' => $request->student_id]);
     }
 
-    public function verifyPayment(Request $request, $notificationId)
+    public function updateBatch(Request $request)
     {
         $request->validate([
-            'status' => 'required|in:Approved,Declined',
+            'batch_year' => 'required|string|unique:batches,batch_year',
+            'total_due' => 'required|numeric|min:0',
         ]);
 
-        // Find the notification
-        $notification = Auth::user()->notifications()->findOrFail($notificationId);
-        $paymentData = $notification->data;
+        \App\Models\Batch::updateOrCreate(
+            ['batch_year' => $request->batch_year],
+            ['total_due' => $request->total_due]
+        );
 
-        // Update the payment status using the correct primary key
-        $payment = Payment::where('payment_id', $paymentData['payment_id'])->firstOrFail();
-        $payment->update(['status' => $request->status]);
-
-        // Notify the student about the status update
-        $student = $payment->student;
-        $student->user->notify(new PaymentSubmissionNotification($payment));
-
-        // Mark the notification as read
-        $notification->markAsRead();
-
-        return redirect()->route('finance.notifications')->with('success', 'Payment status updated successfully!');
-    }
-
-    public function notifications()
-    {
-        $notifications = Auth::user()->notifications()->orderBy('created_at', 'desc')->get();
-        return view('finance.notifications', compact('notifications'));
+        return redirect()->back()->with('success', 'Batch payment amount updated successfully.');
     }
 }

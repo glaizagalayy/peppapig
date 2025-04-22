@@ -32,4 +32,9 @@ class Student extends Model
     {
         return $this->hasMany(Payment::class, 'student_id', 'student_id');
     }
+
+    public function batch()
+    {
+        return $this->belongsTo(Batch::class, 'batch_year', 'batch_year');
+    }
 }

@@ -15,48 +15,7 @@
         </div>
     </div>
 
-    <!-- Dashboard Cards -->
-    <div class="row">
-        <!-- Account Balance Card -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header text-white" style="background-color: #FF9933;">
-                    <h5 class="mb-0">Account Balance</h5>
-                </div>
-                <div class="card-body">
-                    @php
-                        // Dummy balance value for sample UI
-                        $balance = 2500;
-                    @endphp
-                    <h2 class="fw-bold">₱{{ number_format($balance, 2) }}</h2>
-                    @if($balance > 12000)
-                        <p class="text-success">
-                            You have exceeded ₱12,000 by ₱{{ number_format($balance - 12000, 2) }}.
-                        </p>
-                    @else
-                        <p class="text-danger">
-                            Your balance is below ₱12,000.
-                        </p>
-                    @endif
-                </div>
-            </div>
-        </div>
 
-        <!-- Dashboard Overview Card -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header text-white" style="background-color: #FF9933;">
-                    <h5 class="mb-0">Dashboard Overview</h5>
-                </div>
-                <div class="card-body">
-                    <p>
-                        Here you can check your recent transactions, update your profile details, and review important notifications.
-                    </p>
-                    <!-- You can add additional sample UI components here -->
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Payment Summary Card -->
     <div class="row">
@@ -68,8 +27,8 @@
                 <div class="card-body">
                     @php
                         $totalPaid = Auth::user()->student->payments->sum('amount');
-                        $totalDue = 500 * 24; // 500 pesos per month for 2 years
-                        $remainingBalance = $totalDue - $totalPaid;
+                        $totalDue = Auth::user()->student->batch->total_due ?? 0; // Fetch total_due dynamically from the batch
+                        $remainingBalance = max(0, $totalDue - $totalPaid); // Ensure remaining balance is not negative
                     @endphp
                     <p><strong>Total Paid:</strong> ₱{{ number_format($totalPaid, 2) }}</p>
                     <p><strong>Remaining Balance:</strong> ₱{{ number_format($remainingBalance, 2) }}</p>

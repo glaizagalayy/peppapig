@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('pnph_users', function (Blueprint $table) {
-            if (!Schema::hasColumn('pnph_users', 'password_reset_required')) {
-                $table->boolean('password_reset_required')->default(true)->after('password');
-            }
-        });
+        if (!Schema::hasColumn('pnph_users', 'password_reset_required')) {
+            Schema::table('pnph_users', function (Blueprint $table) {
+                $table->boolean('password_reset_required')->default(1)->after('password');
+            });
+        }
     }
 
     /**
@@ -23,10 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pnph_users', function (Blueprint $table) {
-            if (Schema::hasColumn('pnph_users', 'password_reset_required')) {
+        if (Schema::hasColumn('pnph_users', 'password_reset_required')) {
+            Schema::table('pnph_users', function (Blueprint $table) {
                 $table->dropColumn('password_reset_required');
-            }
-        });
+            });
+        }
     }
 };
