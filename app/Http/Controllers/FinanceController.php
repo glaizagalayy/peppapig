@@ -7,6 +7,9 @@ use App\Models\Batch;
 use Illuminate\Http\Request;
 use App\Notifications\PaymentSubmissionNotification;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ReceiptMail;
 
 class FinanceController extends Controller
 {
@@ -58,10 +61,25 @@ class FinanceController extends Controller
             'payment_mode' => 'required|string',
         ]);
 
-        // Exclude `_token` from the request data
-        Payment::create($request->except('_token'));
+        $payment = Payment::create([
+            'student_id' => $request->student_id,
+            'amount' => $request->amount,
+            'payment_date' => now(),
+            'payment_mode' => $request->payment_mode,
+        ]);
 
-        return redirect()->route('finance.payment-history', ['studentId' => $request->student_id]);
+        $this->sendReceipt($payment);
+
+        return redirect()->back()->with('success', 'Payment added and receipt sent!');
+    }
+
+    public function verifyPayment(Payment $payment)
+    {
+        $payment->update(['verified' => true]);
+
+        $this->sendReceipt($payment);
+
+        return redirect()->back()->with('success', 'Payment verified and receipt sent!');
     }
 
     public function updateBatch(Request $request)
@@ -77,5 +95,17 @@ class FinanceController extends Controller
         );
 
         return redirect()->back()->with('success', 'Batch payment amount updated successfully.');
+    }
+
+    private function sendReceipt($payment)
+    {
+        $student = $payment->student;
+
+        // Generate PDF
+        $pdf = Pdf::loadView('receipts.receipts', compact('payment', 'student'))
+                  ->setPaper('a4', 'landscape');
+
+        // Send email with receipt
+        Mail::to($student->email)->send(new ReceiptMail($payment, $pdf->output()));
     }
 }

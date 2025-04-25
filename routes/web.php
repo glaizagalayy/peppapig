@@ -132,8 +132,5 @@ Route::middleware(['auth', 'role:finance'])->group(function () {
 Route::middleware(['auth', 'role:finance'])->group(function () {
     Route::post('/finance/manage-batches', [FinanceController::class, 'updateBatch'])->name('finance.updateBatch');
 });
-
-Route::get('/password/change', [PasswordController::class, 'showChangePasswordForm'])->name('password.change');
-Route::post('/password/change', [PasswordController::class, 'changePassword'])->name('password.update');
-
+// ... existing code ...
 require __DIR__.'/auth.php';
