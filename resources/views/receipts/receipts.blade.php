@@ -6,53 +6,69 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <title>Payment Receipt</title>
     <style>
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 20mm; /* Adjust as needed */
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .receipt-container {
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
+                page-break-after: avoid;
+            }
+        }
+
         body {
             line-height: 1.6;
             margin: 0;
             padding: 0;
             font-family: 'Poppins', sans-serif;
-            font-size: 18px; /* Set a default font size */
+            font-size: 18px;
         }
 
         .receipt-container {
-            width: 11in; /* Landscape width for A4 paper */
-            height: 8.5in; /* Landscape height for A4 paper */
-            margin: 0 auto; /* Center the receipt */
-            padding: 20px;
-            box-sizing: border-box; /* Ensure padding is included in the dimensions */
+            width: 100%;
+            height: 100%;
+            padding: 20px 40px;
+            box-sizing: border-box;
         }
 
         .header {
             display: flex;
-            align-items: center; /* Vertically align the logo and text */
-            justify-content: center; /* Center the entire header horizontally */
+            align-items: center;
+            justify-content: center;
             margin-bottom: 20px;
-            text-align: left; /* Align text to the left */
+            text-align: left;
         }
 
         .logo-container {
-            flex-shrink: 0; /* Prevent the logo from shrinking */
-            margin-right: 15px; /* Add spacing between the logo and the text */
+            flex-shrink: 0;
+            margin-right: 15px;
         }
 
         .logo {
-            width: 80px; /* Adjust the width as needed */
-            height: auto; /* Maintain aspect ratio */
+            width: 80px;
+            height: auto;
         }
 
         .company-details {
-            text-align: left; /* Align the company name and address to the left */
+            text-align: left;
         }
 
         .company-name {
-            font-size: 20px; /* Adjust font size */
+            font-size: 20px;
             font-weight: bold;
             margin: 0;
         }
 
         .company-address {
-            font-size: 14px; /* Adjust font size */
-            color: solid black;
+            font-size: 14px;
             margin: 5px 0 0;
         }
 
@@ -68,7 +84,6 @@
             text-align: right;
             font-size: 14px;
             margin-bottom: 20px;
-            padding-right: 80px; /* Add right padding to the date */
         }
 
         .receipt-content {
@@ -81,19 +96,18 @@
             font-size: 14px;
         }
 
+        .signature-section {
+            margin-top: 30px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
         .footer {
             text-align: center;
             margin-top: 20px;
             font-size: 12px;
+            font-weight: normal;
         }
-
-        .signature-section {
-            margin-top: 30px;
-            font-weight: bold; /* Make the text bold */
-            font-size: 12px; /* Make the text smaller */
-        }
-
-      
     </style>
 </head>
 <body>
@@ -110,14 +124,16 @@
 
         <div class="receipt-title">ACKNOWLEDGEMENT RECEIPT</div>
 
-        <div class="receipt-date" >
-            Date:<strong  style="text-decoration:underline;"> {{ date('F j, Y') }}</strong>
+        <div class="receipt-date">
+            Date: <strong style="text-decoration:underline;">{{ date('F j, Y') }}</strong>
         </div>
 
         <div class="receipt-content">
             <p>To Whom It May Concern:</p>
-            
-                <p style="text-indent:30px;">This is to acknowledge receipt from <strong style="text-decoration:underline;"> {{ $student->first_name }} {{ $student->last_name }} </strong>  the amount of <strong style="text-decoration:underline;"> PhP {{ number_format($payment->amount, 2) }}</strong> as payment for <strong  style="text-decoration:underline;" >Parents' Counterpart.</strong></p>
+            <p style="text-indent:30px;">
+                This is to acknowledge receipt from <strong style="text-decoration:underline;">{{ $student->first_name }} {{ $student->last_name }}</strong> the amount of <strong style="text-decoration:underline;">PhP {{ number_format($payment->amount, 2) }}</strong> as payment for <strong style="text-decoration:underline;">Parents' Counterpart.</strong>
+            </p>
+        </div>
 
         <div class="details">
             <p><strong>Student Name:</strong> {{ $student->first_name }} {{ $student->last_name }}</p>
@@ -128,10 +144,10 @@
         </div>
 
         <div class="signature-section">
-            <div>
-                <p>This information has been duly verified by the finance team.</p>
-            </div>
-        <div class="footer" style="font-weight:normal;">
+            <p>This information has been duly verified by the finance team.</p>
+        </div>
+
+        <div class="footer">
             This is an electronically generated receipt. No signature is required.
         </div>
     </div>

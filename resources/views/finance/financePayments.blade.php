@@ -19,7 +19,7 @@
         <select id="batchFilter" class="form-select" onchange="filterByBatch()">
             <option value="">All Batches</option>
             @foreach ($batches as $batch)
-                <option value="{{ $batch->batch_year }}" {{ request('batch_year') == $batch->batch_year ? 'selected' : '' }}>
+                <option value="{{ $batch->batch_year }}" {{ $batchYear == $batch->batch_year ? 'selected' : '' }}>
                     {{ $batch->batch_year }}
                 </option>
             @endforeach
@@ -144,13 +144,8 @@
 
     function filterByBatch() {
         const batchYear = document.getElementById('batchFilter').value;
-        const url = new URL(window.location.href);
-        if (batchYear) {
-            url.searchParams.set('batch_year', batchYear);
-        } else {
-            url.searchParams.delete('batch_year');
-        }
-        window.location.href = url.toString();
+        const url = "{{ route('finance.filterStudentsByBatch') }}";
+        window.location.href = url + (batchYear ? '?batch_year=' + batchYear : '');
     }
 </script>
 @endsection

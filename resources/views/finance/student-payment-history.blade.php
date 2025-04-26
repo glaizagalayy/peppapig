@@ -13,7 +13,7 @@
             <p><strong>Student ID:</strong> {{ $student->student_id }}</p>
             <p><strong>Batch Year:</strong> {{ $student->batch_year }}</p>
             <p><strong>Total Paid:</strong> ₱{{ number_format($student->payments->sum('amount'), 2) }}</p>
-            <p><strong>Remaining Balance:</strong> ₱{{ number_format((500 * 24) - $student->payments->sum('amount'), 2) }}</p>
+            <p><strong>Remaining Balance:</strong> ₱{{ number_format(max(0, ($student->batch->total_due ?? 0) - $student->payments->sum('amount')), 2) }}</p>
 
             <h6>Payment History</h6>
             <table class="table table-bordered">

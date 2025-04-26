@@ -21,23 +21,37 @@ class FinanceController extends Controller
 
     public function managePayments()
     {
-        $students = Student::with('payments', 'batch')->get(); // Include the 'batch' relationship
-        $batches = Batch::all(); // Fetch all available batches
-        return view('finance.financePayments', compact('students', 'batches'));
+        $students = Student::with('payments', 'batch')->get();
+        $batches = Batch::all();
+        $batchYear = request('batch_year'); // Get the batch year from the request
+        
+        return view('finance.financePayments', compact('students', 'batches', 'batchYear'));
     }
 
     public function index(Request $request)
     {
         $batchYear = $request->query('batch_year');
-        $students = Student::with('payments', 'batch')
-            ->when($batchYear, function ($query, $batchYear) {
-                $query->where('batch_year', '=', $batchYear);
-            })
-            ->get();
-
-        dd($batchYear, $students); // Debug the batch year and filtered students
-
+        
+        // Debug the incoming batch year
+        \Log::info('Batch Year from request: ' . $batchYear);
+        
+        $query = Student::with('payments', 'batch');
+        
+        if ($batchYear) {
+            \Log::info('Applying batch filter for year: ' . $batchYear);
+            $query->where('batch_year', $batchYear);
+        }
+        
+        $students = $query->orderBy('last_name')
+                         ->orderBy('first_name')
+                         ->get();
+                         
+        // Debug the results
+        \Log::info('Number of students found: ' . $students->count());
+        \Log::info('First student batch year: ' . ($students->first() ? $students->first()->batch_year : 'No students'));
+        
         $batches = Batch::all();
+        \Log::info('Available batches: ' . $batches->pluck('batch_year')->implode(', '));
 
         return view('finance.financePayments', compact('students', 'batches'));
     }
@@ -85,14 +99,20 @@ class FinanceController extends Controller
     public function updateBatch(Request $request)
     {
         $request->validate([
-            'batch_year' => 'required|string|unique:batches,batch_year',
+            'batch_year' => 'required|string',
             'total_due' => 'required|numeric|min:0',
         ]);
 
-        \App\Models\Batch::updateOrCreate(
-            ['batch_year' => $request->batch_year],
-            ['total_due' => $request->total_due]
-        );
+        $batch = Batch::where('batch_year', $request->batch_year)->first();
+        
+        if ($batch) {
+            $batch->update(['total_due' => $request->total_due]);
+        } else {
+            Batch::create([
+                'batch_year' => $request->batch_year,
+                'total_due' => $request->total_due
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Batch payment amount updated successfully.');
     }
@@ -107,5 +127,40 @@ class FinanceController extends Controller
 
         // Send email with receipt
         Mail::to($student->email)->send(new ReceiptMail($payment, $pdf->output()));
+    }
+
+    public function downloadReceipt($paymentId)
+    {
+        $payment = Payment::findOrFail($paymentId);
+        $student = $payment->student;
+
+        $pdf = Pdf::loadView('receipts.receipts', compact('payment', 'student'))
+                  ->setPaper('a4', 'landscape');
+
+        return $pdf->download('acknowledgement_receipt.pdf');
+    }
+
+    public function filterStudentsByBatch(Request $request)
+    {
+        $batchYear = $request->input('batch_year');
+        
+        // Get all available batches for the dropdown
+        $batches = Batch::all();
+        
+        // Query students with their payments and batch information
+        $query = Student::with('payments', 'batch');
+        
+        // Apply batch filter if a specific batch is selected
+        if ($batchYear) {
+            $query->where('batch_year', $batchYear);
+        }
+        
+        // Get the filtered students ordered by last name and first name
+        $students = $query->orderBy('last_name')
+                         ->orderBy('first_name')
+                         ->get();
+        
+        // Return the view with the filtered data
+        return view('finance.financePayments', compact('students', 'batches', 'batchYear'));
     }
 }

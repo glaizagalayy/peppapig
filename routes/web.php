@@ -103,16 +103,11 @@ Route::middleware(['auth', 'role:finance'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:finance'])->group(function () {
-    Route::get('/finance/dashboard', function () {
-        return view('finance.financeDashboard');
-    })->name('finance.financeDashboard');
-});
-
-Route::middleware(['auth', 'role:finance'])->group(function () {
-    Route::get('/finance/payments', [FinanceController::class, 'managePayments'])->name('finance.financePayments');
+    Route::get('/finance/payments', [FinanceController::class, 'filterStudentsByBatch'])->name('finance.financePayments');
     Route::get('/finance/payments/history/{studentId}', [FinanceController::class, 'getPaymentHistory']);
     Route::post('/finance/payments/add', [FinanceController::class, 'addPayment'])->name('finance.addPayment');
     Route::post('/finance/payments/verify/{payment}', [FinanceController::class, 'verifyPayment'])->name('finance.verifyPayment');
+    Route::get('/finance/payments/download-receipt/{paymentId}', [FinanceController::class, 'downloadReceipt'])->name('finance.downloadReceipt');
 });
 
 Route::middleware(['auth', 'role:finance'])->group(function () {
@@ -132,5 +127,16 @@ Route::middleware(['auth', 'role:finance'])->group(function () {
 Route::middleware(['auth', 'role:finance'])->group(function () {
     Route::post('/finance/manage-batches', [FinanceController::class, 'updateBatch'])->name('finance.updateBatch');
 });
-// ... existing code ...
+
+Route::middleware(['auth', 'role:finance'])->group(function () {
+    Route::get('/finance/debug/students', function () {
+        $students = \App\Models\Student::select('student_id', 'batch_year')->get();
+        return response()->json($students);
+    });
+});
+
+Route::middleware(['auth', 'role:finance'])->group(function () {
+    Route::get('/finance/payments/filter', [FinanceController::class, 'filterStudentsByBatch'])->name('finance.filterStudentsByBatch');
+});
+
 require __DIR__.'/auth.php';
