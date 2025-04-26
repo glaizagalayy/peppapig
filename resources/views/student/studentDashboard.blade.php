@@ -9,7 +9,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="alert alert-info shadow-sm">
-                <h4>Hello, Sample Student!</h4>
+                <h4>Hello, <strong>{{ strtok($student->first_name, ' ') }}</strong>!</h4>
                 <p>Welcome to your personalized finance dashboard.</p>
             </div>
         </div>
@@ -43,30 +43,41 @@
                     <h5 class="mb-0">Notifications</h5>
                 </div>
                 <div class="card-body">
-                    @if(Auth::user()->notifications->count() > 0)
-                        <ul class="list-group">
-                            @foreach (Auth::user()->notifications as $notification)
-                                <li class="list-group-item">
-                                    @if($notification->data['type'] == 'batch_update')
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <i class="fas fa-info-circle text-info me-2"></i>
-                                                {{ $notification->data['message'] }}
-                                            </div>
-                                            <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
-                                        </div>
-                                    @else
-                                        {{ $notification->data['message'] ?? 'No message available.' }}
-                                        <span class="badge bg-{{ $notification->data['status'] === 'Approved' ? 'success' : ($notification->data['status'] === 'Declined' ? 'danger' : 'warning') }}">
-                                            {{ $notification->data['status'] }}
-                                        </span>
-                                    @endif
-                                </li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <p class="text-muted mb-0">No notifications available.</p>
-                    @endif
+                    @forelse($user->notifications as $notification)
+                        <div class="notification-item mb-3">
+                            @if(isset($notification->data['type']) && $notification->data['type'] === 'receipt_available')
+                                <div class="notification-content">
+                                    <i class="fas fa-file-invoice text-primary"></i>
+                                    <div class="notification-text">
+                                        <p class="mb-1">{!! $notification->data['message'] !!}</p>
+                                        <p class="text-muted small mb-1">Receipt Number: {{ $notification->data['receipt_number'] }}</p>
+                                        <p class="text-muted small mb-1">Amount: ₱{{ number_format($notification->data['amount'], 2) }}</p>
+                                        <p class="text-muted small mb-1">Date: {{ \Carbon\Carbon::parse($notification->data['payment_date'])->format('F j, Y') }}</p>
+                                        <a href="{{ $notification->data['download_url'] }}" class="btn btn-sm btn-primary mt-2">
+                                            <i class="fas fa-download"></i> Download Receipt
+                                        </a>
+                                    </div>
+                                </div>
+                            @elseif(isset($notification->data['type']) && $notification->data['type'] === 'batch_update')
+                                <div class="notification-content">
+                                    <i class="fas fa-info-circle text-info"></i>
+                                    <div class="notification-text">
+                                        {!! $notification->data['message'] !!}
+                                    </div>
+                                </div>
+                            @else
+                                <div class="notification-content">
+                                    <i class="fas fa-money-bill-wave text-success"></i>
+                                    <div class="notification-text">
+                                        {!! $notification->data['message'] !!}
+                                    </div>
+                                </div>
+                            @endif
+                            <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
+                        </div>
+                    @empty
+                        <p class="text-muted">No notifications available.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
