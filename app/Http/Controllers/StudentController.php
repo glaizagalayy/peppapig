@@ -57,4 +57,10 @@ class StudentController extends Controller
         $notifications = Auth::user()->notifications()->orderBy('created_at', 'desc')->get();
         return view('student.notifications', compact('notifications'));
     }
+
+    public function dashboard()
+    {
+        $student = Auth::user()->student()->with('payments', 'batch')->first();
+        return view('student.studentDashboard', compact('student'));
+    }
 }

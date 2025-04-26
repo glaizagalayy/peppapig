@@ -27,9 +27,7 @@ Route::middleware(['auth', 'role:student'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:student'])->group(function () {
-    Route::get('/student/dashboard', function () {
-        return view('student.studentDashboard');
-    })->name('student.studentDashboard');
+    Route::get('/student/dashboard', [StudentController::class, 'dashboard'])->name('student.studentDashboard');
 });
 
 

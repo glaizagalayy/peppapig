@@ -104,17 +104,44 @@ class FinanceController extends Controller
         ]);
 
         $batch = Batch::where('batch_year', $request->batch_year)->first();
+        $oldAmount = $batch ? $batch->total_due : 0;
         
         if ($batch) {
             $batch->update(['total_due' => $request->total_due]);
         } else {
-            Batch::create([
+            $batch = Batch::create([
                 'batch_year' => $request->batch_year,
                 'total_due' => $request->total_due
             ]);
         }
 
-        return redirect()->back()->with('success', 'Batch payment amount updated successfully.');
+        // Get all students in this batch
+        $students = Student::where('batch_year', $request->batch_year)->get();
+        
+        // Send notification to each student
+        foreach ($students as $student) {
+            if ($student->user) {
+                $notificationData = [
+                    'type' => 'batch_update',
+                    'batch_year' => $request->batch_year,
+                    'old_amount' => $oldAmount,
+                    'new_amount' => $request->total_due,
+                    'status' => 'Updated',
+                    'payment_date' => now()->format('Y-m-d H:i:s'),
+                    'message' => "Dear Batch " . $request->batch_year . "\n\n" .
+                               "Good day Students! Please be informed that the payable amount for Parents' Counterpart for your batch has been updated from <strong>₱" . 
+                               number_format($oldAmount, 2) . "</strong> to <strong>₱" . 
+                               number_format($request->total_due, 2) . "</strong>.\n\n" .
+                               "Kindly review the updated details at your earliest convenience. Should you have any questions or require further clarification, please do not hesitate to reach out to the finance office.\n\n" .
+                               "We appreciate you staying up-to-date with this adjustment!\n\n" .
+                               "Best regards,\nFinance Department"
+                ];
+                
+                $student->user->notify(new PaymentSubmissionNotification($notificationData));
+            }
+        }
+
+        return redirect()->back()->with('success', 'Batch payment amount updated successfully and students have been notified.');
     }
 
     private function sendReceipt($payment)

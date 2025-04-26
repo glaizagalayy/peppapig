@@ -15,8 +15,6 @@
         </div>
     </div>
 
-
-
     <!-- Payment Summary Card -->
     <div class="row">
         <div class="col-lg-6 mb-4">
@@ -26,12 +24,14 @@
                 </div>
                 <div class="card-body">
                     @php
-                        $totalPaid = Auth::user()->student->payments->sum('amount');
-                        $totalDue = Auth::user()->student->batch->total_due ?? 0; // Fetch total_due dynamically from the batch
-                        $remainingBalance = max(0, $totalDue - $totalPaid); // Ensure remaining balance is not negative
+                        $totalPaid = $student->payments->sum('amount');
+                        $totalDue = $student->batch->total_due ?? 0;
+                        $remainingBalance = max(0, $totalDue - $totalPaid);
                     @endphp
                     <p><strong>Total Paid:</strong> ₱{{ number_format($totalPaid, 2) }}</p>
                     <p><strong>Remaining Balance:</strong> ₱{{ number_format($remainingBalance, 2) }}</p>
+                    <p><strong>Batch Year:</strong> {{ $student->batch_year }}</p>
+                    <p><strong>Total Amount Due:</strong> ₱{{ number_format($totalDue, 2) }}</p>
                 </div>
             </div>
         </div>
@@ -43,16 +43,30 @@
                     <h5 class="mb-0">Notifications</h5>
                 </div>
                 <div class="card-body">
-                    <ul class="list-group">
-                        @foreach (Auth::user()->notifications as $notification)
-                            <li class="list-group-item">
-                                {{ $notification->data['message'] ?? 'No message available.' }}
-                                <span class="badge bg-{{ $notification->data['status'] === 'Approved' ? 'success' : ($notification->data['status'] === 'Declined' ? 'danger' : 'warning') }}">
-                                    {{ $notification->data['status'] }}
-                                </span>
-                            </li>
-                        @endforeach
-                    </ul>
+                    @if(Auth::user()->notifications->count() > 0)
+                        <ul class="list-group">
+                            @foreach (Auth::user()->notifications as $notification)
+                                <li class="list-group-item">
+                                    @if($notification->data['type'] == 'batch_update')
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="fas fa-info-circle text-info me-2"></i>
+                                                {{ $notification->data['message'] }}
+                                            </div>
+                                            <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
+                                        </div>
+                                    @else
+                                        {{ $notification->data['message'] ?? 'No message available.' }}
+                                        <span class="badge bg-{{ $notification->data['status'] === 'Approved' ? 'success' : ($notification->data['status'] === 'Declined' ? 'danger' : 'warning') }}">
+                                            {{ $notification->data['status'] }}
+                                        </span>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="text-muted mb-0">No notifications available.</p>
+                    @endif
                 </div>
             </div>
         </div>
