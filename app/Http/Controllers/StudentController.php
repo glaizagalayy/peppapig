@@ -61,6 +61,7 @@ class StudentController extends Controller
     public function dashboard()
     {
         $student = Auth::user()->student()->with('payments', 'batch')->first();
-        return view('student.studentDashboard', compact('student'));
+        $user = Auth::user();
+        return view('student.studentDashboard', compact('student', 'user'));
     }
 }

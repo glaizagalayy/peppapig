@@ -42,6 +42,7 @@
                         {{-- <th>#</th> --}}
                         <th>Student ID</th>
                         <th>Name</th>
+                        <th>Payable Amount</th>
                         <th>Total Paid</th>
                         <th>Remaining Balance</th>
                         <th>Actions</th>
@@ -58,6 +59,7 @@
                             {{-- <td>{{ $loop->iteration }}</td> --}}
                             <td>{{ $student->student_id }}</td>
                             <td>{{ $student->first_name }} {{ $student->last_name }}</td>
+                            <td>₱{{ number_format($totalDue, 2) }}</td>
                             <td>₱{{ number_format($totalPaid, 2) }}</td>
                             <td>₱{{ number_format($remainingBalance, 2) }}</td>
                             <td>
