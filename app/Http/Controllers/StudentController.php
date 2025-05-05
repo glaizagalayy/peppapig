@@ -6,8 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\PaymentSubmissionNotification;
 use App\Notifications\PaymentVerificationNotification;
-
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\CustomNotification;
 
 class StudentController extends Controller
 {
@@ -28,22 +29,23 @@ class StudentController extends Controller
             'amount' => 'required|numeric|min:1',
             'payment_date' => 'required|date',
             'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'reference_number' => 'nullable|string|max:255',
+            'reference_number' => 'required|string|max:255',
+            'payment_mode' => 'required|string|in:GCash,Bank Transfer,Cash', // Add validation
         ]);
 
         $filePath = $request->file('payment_proof')->store('payment_proofs', 'public');
 
         $payment = Payment::create([
-            'student_id' => Auth::user()->login_id,
+            'student_id' => Auth::user()->student->student_id,
             'amount' => $request->amount,
             'payment_date' => $request->payment_date,
-            'payment_mode' => $request->payment_mode ?? 'N/A',
-            'reference_number' => $request->reference_number,
             'payment_proof' => $filePath,
+            'reference_number' => $request->reference_number,
+            'payment_mode' => $request->payment_mode, // Add this
             'status' => 'Pending',
         ]);
 
-        // Notify the finance team
+        // Notify finance users
         $financeUsers = User::where('role', 'finance')->get();
         foreach ($financeUsers as $financeUser) {
             $financeUser->notify(new PaymentVerificationNotification($payment));
@@ -54,14 +56,43 @@ class StudentController extends Controller
 
     public function notifications()
     {
-        $notifications = Auth::user()->notifications()->orderBy('created_at', 'desc')->get();
+        $notifications = CustomNotification::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('student.notifications', compact('notifications'));
+    }
+
+    public function paymentHistory()
+    {
+        $payments = Auth::user()->student->payments()->orderBy('payment_date', 'desc')->get();
+        return view('student.studentPayments', compact('payments'));
     }
 
     public function dashboard()
     {
-        $student = Auth::user()->student()->with('payments', 'batch')->first();
-        $user = Auth::user();
-        return view('student.studentDashboard', compact('student', 'user'));
+        $student = Auth::user()->student; // Assuming the logged-in user has a 'student' relationship
+        return view('student.studentDashboard', compact('student'));
+    }
+
+    public function getDashboardPayments()
+    {
+        $payments = Auth::user()->student->payments()
+            ->whereIn('status', ['Approved', 'Added by Finance'])
+            ->orderBy('payment_date')
+            ->get()
+            ->groupBy(function($payment) {
+                return $payment->payment_date->format('Y-m');
+            })
+            ->map(function($group) {
+                return [
+                    'year' => $group->first()->payment_date->format('Y'),
+                    'month' => $group->first()->payment_date->format('m'),
+                    'total' => $group->sum('amount')
+                ];
+            })
+            ->values();
+
+        return response()->json($payments);
     }
 }

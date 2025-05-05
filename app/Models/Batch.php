@@ -1,21 +1,13 @@
 <?php
-
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Batch extends Model
 {
-    use HasFactory;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<string>
-     */
-    protected $fillable = [
-        'batch_year',
-        'total_due',
-    ];
+    protected $fillable = ['batch_year', 'total_due']; // Add other fields as needed
+    public function payments()
+    {
+        return $this->hasManyThrough(Payment::class, Student::class, 'batch_year', 'student_id', 'batch_year', 'student_id');
+    }
 }

@@ -3,10 +3,11 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class PaymentVerificationNotification extends Notification
+class PaymentVerificationNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -17,32 +18,44 @@ class PaymentVerificationNotification extends Notification
         $this->payment = $payment;
     }
 
+    /**
+     * Determine the notification delivery channels.
+     */
     public function via($notifiable)
     {
-        return ['mail', 'database'];
+        return ['mail', 'database']; // Send via email and store in the database
     }
 
+    /**
+     * Build the email representation of the notification.
+     */
     public function toMail($notifiable)
     {
+        $amount = number_format($this->payment->amount, 2);
+        $date = $this->payment->payment_date->format('Y-m-d');
+
         return (new MailMessage)
-            ->subject('New Payment Submission')
-            ->line('A new payment has been submitted by a student.')
-            ->line('Student ID: ' . $this->payment->student_id)
-            ->line('Amount: ₱' . number_format($this->payment->amount, 2))
-            ->line('Date: ' . $this->payment->payment_date)
-            ->line('Reference Number: ' . ($this->payment->reference_number ?? 'N/A'))
-            ->action('Verify Payment', url('/finance/payments'))
-            ->line('Please review and verify the payment.');
+            ->subject('New Payment Proof Uploaded')
+            ->line('A new payment proof has been uploaded by ' . $this->payment->student->first_name . ' ' . $this->payment->student->last_name . '.')
+            ->line('Amount: ₱' . $amount)
+            ->line('Date: ' . $date)
+            ->action('Review Payment', url('/finance/notifications'))
+            ->line('Please review and take action.');
     }
 
+    /**
+     * Store the notification in the database.
+     */
     public function toArray($notifiable)
     {
         return [
-            'payment_id' => $this->payment->payment_id, // Ensure this field exists in the $payment object
-            'student_id' => $this->payment->student_id,
+            'message' => 'A new payment proof has been uploaded by ' . $this->payment->student->first_name . ' ' . $this->payment->student->last_name,
+            'payment_id' => $this->payment->payment_id,
+            'status' => $this->payment->status,
             'amount' => $this->payment->amount,
             'payment_date' => $this->payment->payment_date,
             'reference_number' => $this->payment->reference_number,
+            'remarks' => $this->payment->remarks,
         ];
     }
 }

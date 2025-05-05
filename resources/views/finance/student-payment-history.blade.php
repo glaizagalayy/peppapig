@@ -12,8 +12,8 @@
         <div class="card-body">
             <p><strong>Student ID:</strong> {{ $student->student_id }}</p>
             <p><strong>Batch Year:</strong> {{ $student->batch_year }}</p>
-            <p><strong>Total Paid:</strong> ₱{{ number_format($student->payments->sum('amount'), 2) }}</p>
-            <p><strong>Remaining Balance:</strong> ₱{{ number_format(max(0, ($student->batch->total_due ?? 0) - $student->payments->sum('amount')), 2) }}</p>
+            <p><strong>Total Paid:</strong> ₱{{ number_format($student->payments->where('status', 'Approved')->sum('amount'), 2) }}</p>
+            <p><strong>Remaining Balance:</strong> ₱{{ number_format((500 * 24) - $student->payments->where('status', 'Approved')->sum('amount'), 2) }}</p>
 
             <h6>Payment History</h6>
             <table class="table table-bordered">
@@ -23,6 +23,7 @@
                         <th>Amount</th>
                         <th>Date</th>
                         <th>Mode</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -32,6 +33,11 @@
                             <td>₱{{ number_format($payment->amount, 2) }}</td>
                             <td>{{ $payment->payment_date }}</td>
                             <td>{{ ucfirst($payment->payment_mode) }}</td>
+                            <td>
+                                <span class="badge bg-{{ $payment->status === 'Approved' ? 'success' : ($payment->status === 'Declined' ? 'danger' : 'warning') }}">
+                                    {{ $payment->status }}
+                                </span>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>

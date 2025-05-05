@@ -29,9 +29,9 @@ class PaymentSubmissionNotification extends Notification
     public function via(object $notifiable): array
     {
         if (is_array($this->payment)) {
-            return ['mail', 'database'];
+            return ['database'];
         }
-        return ['mail', 'database'];
+        return ['database'];
     }
 
     /**

@@ -5,6 +5,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -65,9 +66,7 @@ Route::middleware(['auth', 'role:student'])->group(function () {
     Route::post('/student/payments/upload', [StudentController::class, 'uploadPaymentProof'])->name('student.uploadPaymentProof');
 });
 Route::middleware(['auth', 'role:student'])->group(function () {
-    Route::get('/student/payments', function () {
-        return view('student.studentPayments');
-    })->name('student.studentPayments');
+    Route::get('/student/payments', [StudentController::class, 'paymentHistory'])->name('student.studentPayments');
 });
 
 Route::middleware(['auth', 'role:student'])->group(function () {
@@ -76,14 +75,16 @@ Route::middleware(['auth', 'role:student'])->group(function () {
     })->name('student.studentUpload');
 });
 
+Route::get('/student/dashboard/payments', [StudentController::class, 'getDashboardPayments'])
+    ->name('student.dashboard.payments');
+
 Route::middleware(['auth', 'role:student'])->group(function () {
-    Route::get('/student/notifications', [StudentController::class, 'notifications'])->name('student.notifications');
+    Route::get('/student/notifications', [StudentController::class, 'notifications'])
+        ->name('student.notifications');
 });
 
 Route::middleware(['auth', 'role:finance'])->group(function () {
-    Route::get('/finance/dashboard', function () {
-        return view('finance.financeDashboard');
-    })->name('finance.financeDashboard');
+    Route::get('/finance/dashboard', [FinanceController::class, 'dashboard'])->name('finance.financeDashboard');
 });
 Route::middleware(['auth', 'role:finance'])->group(function () {
     Route::get('/finance/payments', function () {
@@ -101,40 +102,46 @@ Route::middleware(['auth', 'role:finance'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:finance'])->group(function () {
-    Route::get('/finance/payments', [FinanceController::class, 'filterStudentsByBatch'])->name('finance.financePayments');
-    Route::get('/finance/payments/history/{studentId}', [FinanceController::class, 'getPaymentHistory']);
+    Route::get('/finance/payments', [FinanceController::class, 'managePayments'])->name('finance.financePayments');
+    Route::get('/finance/payments/history/{studentId}', [FinanceController::class, 'getPaymentHistory'])->name('finance.getPaymentHistory');
     Route::post('/finance/payments/add', [FinanceController::class, 'addPayment'])->name('finance.addPayment');
     Route::post('/finance/payments/verify/{payment}', [FinanceController::class, 'verifyPayment'])->name('finance.verifyPayment');
-    Route::get('/finance/payments/download-receipt/{paymentId}', [FinanceController::class, 'downloadReceipt'])->name('finance.downloadReceipt');
+    Route::put('/finance/payments/edit/{payment}', [FinanceController::class, 'editPayment'])->name('finance.editPayment');
+    Route::delete('/finance/payments/delete/{payment}', [FinanceController::class, 'deletePayment'])->name('finance.deletePayment');
+});
+Route::middleware(['auth', 'role:finance'])->group(function () {
+    Route::get('/finance/history', [FinanceController::class, 'history'])->name('finance.history');
 });
 
 Route::middleware(['auth', 'role:finance'])->group(function () {
     Route::get('/finance/notifications', [FinanceController::class, 'notifications'])->name('finance.notifications');
 });
 Route::middleware(['auth', 'role:finance'])->group(function () {
-    Route::get('/finance/payment-history', function () {
-        return view('finance.payment-history', [
-            'students' => \App\Models\Student::with('payments')->get()
-        ]);
-    })->name('finance.payment-history');
-
-    Route::get('/finance/payment-history/{studentId}', [FinanceController::class, 'getPaymentHistory'])
-        ->name('finance.getPaymentHistory');
+    Route::get('/finance/payment-history', [FinanceController::class, 'paymentHistory'])->name('finance.payment-history');
+    Route::post('/finance/update-batch', [FinanceController::class, 'updateBatch'])->name('finance.updateBatch');
 });
+
+Route::get('/finance/monthly-payments', [FinanceController::class, 'getMonthlyPayments'])->name('finance.monthly-payments');
+Route::get('/finance/yearly-payments', [FinanceController::class, 'getYearlyPayments'])->name('finance.yearly-payments');
 
 Route::middleware(['auth', 'role:finance'])->group(function () {
-    Route::post('/finance/manage-batches', [FinanceController::class, 'updateBatch'])->name('finance.updateBatch');
+    Route::get('/finance/reports', function () {
+        $batches = \App\Models\Batch::all(); // Fetch all batches
+        return view('finance.financeReports', compact('batches'));
+    })->name('finance.financeReports');
 });
+Route::post('/finance/reports/generate', [FinanceController::class, 'generateReport'])->name('finance.reports.generate');
+Route::get('/finance/reports/download', [FinanceController::class, 'downloadReport'])->name('finance.reports.download');
 
 Route::middleware(['auth', 'role:finance'])->group(function () {
-    Route::get('/finance/debug/students', function () {
-        $students = \App\Models\Student::select('student_id', 'batch_year')->get();
-        return response()->json($students);
-    });
+    Route::get('/finance/reports', [FinanceController::class, 'reports'])->name('finance.financeReports');
 });
 
-Route::middleware(['auth', 'role:finance'])->group(function () {
-    Route::get('/finance/payments/filter', [FinanceController::class, 'filterStudentsByBatch'])->name('finance.filterStudentsByBatch');
-});
+Route::get('/finance/summary-data', [FinanceController::class, 'getSummaryData'])->name('finance.summaryData');
+Route::get('/password/change', [PasswordController::class, 'showChangePasswordForm'])->name('password.change');
+Route::post('/password/change', [PasswordController::class, 'changePassword'])->name('password.update');
+
+Route::get('/notifications/{notification}/download-receipt', [NotificationController::class, 'downloadReceipt'])
+    ->name('notifications.downloadReceipt');
 
 require __DIR__.'/auth.php';
